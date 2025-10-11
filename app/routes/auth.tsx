@@ -1,4 +1,6 @@
 import {useEffect, useState} from "react";
+import {useAuth} from "../../hooks/useAuth";
+import {useLocation, useNavigate} from "react-router";
 
 export const meta = () => ([
     {title: "Resume Proto | Auth"},
@@ -7,71 +9,32 @@ export const meta = () => ([
 
 
 export const Auth = () => {
-    const [isLoading, setIsLoading] = useState(true);
-    const [isAuth, setIsAuth] = useState(false);
-
-    async function handleAuth() {
-        // simulate 3 seconds remove on productionn
-        await new Promise(resolve => setTimeout(resolve, 3000))
-
-        let response = await fetch('http://localhost:8080/api/v1/auth/validate', {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        return response.status === 200
-    }
-
-    async function SignIn(e: React.FormEvent<HTMLFormElement>) {
-        e.preventDefault()
-        const form = new FormData(e.currentTarget)
-        const email = form.get('email')
-        const password = form.get('password')
-
-        let response = await fetch('http://localhost:8080/api/v1/auth/login', {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({email, password})
-        })
-        console.log(email, password)
-        if(!response.ok) {
-            const msg = await response.text()
-            throw new Error(msg || "Invalid credentials")
-        }
-        console.log(response)
-        setIsAuth(true)
-    }
-
-    const SignOut = () => {
-        let response = fetch('http://localhost:8080/api/v1/auth/logout', {
-           method: 'GET',
-           credentials: 'include',
-        })
-        console.log(response)
-    }
+    const {isLoading, auth} = useAuth()
+    const location = useLocation()
+    const next = location.search.split("next=")[1]
+    const navigate = useNavigate()
 
     useEffect(() => {
-        let authorize = async () => {
-            const isAuth = await handleAuth()
-            setIsLoading(false)
-            setIsAuth(isAuth)
-        }
-        authorize()
-    }, [])
+        if(!isLoading && auth.isAuthenticated) navigate(next)
+    }, [auth.isAuthenticated,isLoading, next])
+
+    async function HandleSubmitSignIn(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault()
+        const form = new FormData(e.currentTarget)
+        const email = form.get('email') as string
+        const password = form.get('password') as string
+        await auth.SignIn(email, password)
+    }
+
     let content
     if (isLoading) {
         content = <button className={"auth-button animate-pulse"}>Signing you in...</button>
-    } else if (isAuth) {
+    } else if (auth.isAuthenticated) {
         content =
-            <button type={"submit"} className={"auth-button"} onClick={SignOut}><p>Sign Out</p></button>
+            <button type={"submit"} className={"auth-button"} onClick={auth.SignOut}><p>Sign Out</p></button>
     } else {
         content =
-            <form className={"gradient-border w-full mx-auto bg-white"} onSubmit={SignIn}>
+            <form className={"gradient-border w-full mx-auto bg-white"} onSubmit={HandleSubmitSignIn}>
                 <div className={"form-div"}>
                     <label htmlFor={"email"}>Email</label>
                     <input id={"email"} name={"email"} type={"email"} placeholder={"test@example.com"} required/>
