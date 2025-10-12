@@ -21,7 +21,7 @@ export default function Home() {
     if(!auth.isAuthenticated && !isLoading) navigate("/auth?next=/")
   }, [auth.isAuthenticated, isLoading])
 
-  return <main className={"bg-[url('/images/bg-main.svg')] "}>
+  return <main className={"min-h-screen bg-[url('/images/bg-main.svg')] bg-cover"}>
     <Navbar/>
 
     <section className={"main-section"}>
