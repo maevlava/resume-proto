@@ -1,8 +1,19 @@
 import Navbar from "~/components/Navbar";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {FileUploader} from "~/components/FileUploader";
+import {useUpload} from "../../hooks/useUpload";
+import {useAuth} from "../../hooks/useAuth";
+import {useNavigate} from "react-router";
 
 const Upload = () => {
+    const {isLoading, auth} = useAuth()
+    const navigate = useNavigate()
+
+    useEffect(() => {
+        if(!auth.isAuthenticated && !isLoading) navigate("/auth?next=/")
+    }, [auth.isAuthenticated, isLoading])
+
+    const {uploader} = useUpload()
     const [isProcessing, setIsProcessing] = useState(false);
     const [statusText, setStatusText] = useState("");
     const [file, setFile] = useState<File | null>(null)
@@ -13,12 +24,25 @@ const Upload = () => {
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         const form = e.currentTarget.closest('form')
-        if(!form) return;
+        if (!form) return;
         const formData = new FormData(form)
 
         const companyName = formData.get('company-name') as string
         const jobTitle = formData.get('job-title') as string
         const jobDescription = formData.get('job-description') as string
+
+        console.log(companyName, jobTitle, jobDescription, file)
+        handleAnalyze({companyName, jobTitle, jobDescription, file: file as File})
+    }
+    const handleAnalyze = async ({companyName, jobTitle, jobDescription, file}: {
+        companyName: string,
+        jobTitle: string,
+        jobDescription: string,
+        file: File
+    }) => {
+        setIsProcessing(true)
+        setStatusText("Analyzing resume...")
+        await uploader.Upload(companyName, jobTitle, jobDescription, file as File)
     }
 
     let content
