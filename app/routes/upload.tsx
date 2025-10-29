@@ -4,7 +4,6 @@ import {FileUploader} from "~/components/FileUploader";
 import {useUpload} from "../../hooks/useUpload";
 import {useAuth} from "../../hooks/useAuth";
 import {useNavigate} from "react-router";
-import {generateUUID} from "~/utils";
 
 const Upload = () => {
     const {isLoading, auth} = useAuth()

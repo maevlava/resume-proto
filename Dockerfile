@@ -9,6 +9,10 @@ RUN pnpm install --frozen-lockfile
 FROM base AS build
 COPY --from=dev-deps /app/node_modules /app/node_modules
 COPY . .
+ARG VITE_API_BASE_URL
+ARG VITE_STATIC_BASE_URL
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+ENV VITE_STATIC_BASE_URL=${VITE_STATIC_BASE_URL}
 RUN pnpm run build
 
 FROM base AS prod-deps
