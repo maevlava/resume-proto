@@ -4,13 +4,14 @@ import {FileUploader} from "~/components/FileUploader";
 import {useUpload} from "../../hooks/useUpload";
 import {useAuth} from "../../hooks/useAuth";
 import {useNavigate} from "react-router";
+import {generateUUID} from "~/utils";
 
 const Upload = () => {
     const {isLoading, auth} = useAuth()
     const navigate = useNavigate()
 
     useEffect(() => {
-        if(!auth.isAuthenticated && !isLoading) navigate("/auth?next=/")
+        if (!auth.isAuthenticated && !isLoading) navigate("/auth?next=/")
     }, [auth.isAuthenticated, isLoading])
 
     const {uploader} = useUpload()
@@ -32,7 +33,9 @@ const Upload = () => {
         const jobDescription = formData.get('job-description') as string
 
         console.log(companyName, jobTitle, jobDescription, file)
-        handleAnalyze({companyName, jobTitle, jobDescription, file: file as File})
+        handleAnalyze({companyName, jobTitle, jobDescription, file: file as File}).then(() => {
+            console.log("done")
+        })
     }
     const handleAnalyze = async ({companyName, jobTitle, jobDescription, file}: {
         companyName: string,
@@ -41,8 +44,31 @@ const Upload = () => {
         file: File
     }) => {
         setIsProcessing(true)
+
+        setStatusText("Uploading resume...")
+        let response = await uploader.Upload(companyName, jobTitle, jobDescription, file as File)
+        if (!response.ok) {
+            setStatusText("Resume analysis failed")
+            setIsProcessing(false)
+            return
+        }
+        let resume = await response.json()
+        console.log(resume)
+
+
         setStatusText("Analyzing resume...")
-        await uploader.Upload(companyName, jobTitle, jobDescription, file as File)
+        const AIFeedback = await uploader.AIFeedback(resume.resumeID)
+        if (!AIFeedback.ok) {
+            setStatusText("Resume analysis failed")
+            setIsProcessing(false)
+            return
+        }
+        resume = await AIFeedback.json()
+
+        setStatusText("Analysis complete!")
+        setIsProcessing(false)
+
+        navigate(`/resume/${resume.resumeID}`)
     }
 
     let content
