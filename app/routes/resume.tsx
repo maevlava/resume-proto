@@ -17,8 +17,8 @@ const Resume = () => {
     const {store} = useStore()
     const {auth, isLoading} = useAuth()
     const {id} = useParams()
-    const [imageURL, setImageURL] = useState(null)
-    const [resumeURL, setResumeURL] = useState(null)
+    const [imageURL, setImageURL] = useState<string | null>(null)
+    const [resumeURL, setResumeURL] = useState<string | null>(null)
     const [feedback, setFeedback] = useState<Feedback | null>(null)
     const navigate = useNavigate()
 
@@ -30,10 +30,11 @@ const Resume = () => {
     useEffect(() => {
         if (!id) return
         (async () => {
-            const resume = await store.getResumeByID(id)
-            setResumeURL(resume.PdfPath)
-            setImageURL(resume.ImagePath)
-            setFeedback(resume.Feedback)
+            const resume: Resume = await store.getResumeByID(id)
+            setResumeURL(resume.pdfPath)
+            setImageURL(resume.imagePath)
+            setFeedback(resume.feedback)
+            console.log(resume)
         })()
     }, [id, store])
 

@@ -1,5 +1,11 @@
 import {useEffect, useState} from "react";
+import {API_BASE_URL} from "../constants";
 
+interface User {
+    ID: string,
+    Name: string,
+    Email: string,
+}
 export function useAuth() {
     const [isAuthenticated, setIsAuthenticated] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
@@ -48,10 +54,21 @@ export function useAuth() {
         }
         setIsAuthenticated(false)
     }
+    async function GetSignedUser(): Promise<User> {
+        const res = await fetch(`${API_BASE_URL}/auth/me`, {
+            method: "GET",
+            credentials: "include"
+        })
+        if(!res.ok) {
+            throw new Error("Failed to fetch user")
+        }
+        return res.json()
+    }
     return {
         isLoading,
         auth: {
             isAuthenticated,
+            GetSignedUser,
             SignIn,
             SignOut
         },
